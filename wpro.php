@@ -72,6 +72,16 @@ function curl_exec_follow($ch, &$maxredirect = null) {
     return curl_exec($ch); 
 }
 
+function wpro_get_option($option, $default = false) {
+	if (!defined('WPMS_ON') || !WPMS_ON)
+		return get_option($option, $default);
+	$constantName = strtoupper(str_replace('-', '_', $option));
+	if (defined($constantName))
+		return constant($constantName);
+	else
+		return $default;
+}
+
 new WordpressReadOnly;
 
 /* * * * * * * * * * * * * * * * * * * * * * *
@@ -147,8 +157,8 @@ class WordpressReadOnlyKlandestino extends WordpressReadOnlyBackend {
 	public $secret;
 
 	function __construct() {
-		$this->name = get_option('wpro-klandestino-name');
-		$this->secret = get_option('wpro-klandestino-secret');
+		$this->name = wpro_get_option('wpro-klandestino-name');
+		$this->secret = wpro_get_option('wpro-klandestino-secret');
 	}
 
 	function upload($file, $fullurl, $mime) {
@@ -192,10 +202,10 @@ class WordpressReadOnlyS3 extends WordpressReadOnlyBackend {
 	public $endpoint;
 
 	function __construct() {
-		$this->key = get_option('wpro-aws-key');
-		$this->secret = get_option('wpro-aws-secret');
-		$this->bucket = get_option('wpro-aws-bucket');
-		$this->endpoint = get_option('wpro-aws-endpoint');
+		$this->key = wpro_get_option('wpro-aws-key');
+		$this->secret = wpro_get_option('wpro-aws-secret');
+		$this->bucket = wpro_get_option('wpro-aws-bucket');
+		$this->endpoint = wpro_get_option('wpro-aws-endpoint');
 	}
 
 	function upload($file, $fullurl, $mime) {
@@ -281,8 +291,10 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	public $tempdir = '/tmp';
 
 	function __construct() {
-		add_action('admin_init', array($this, 'admin_init')); // Register the settings.
-		add_action('admin_menu', array($this, 'admin_menu')); // Will add the settings menu.
+		if (!defined('WPRO_ON') || !WPRO_ON) {
+			add_action('admin_init', array($this, 'admin_init')); // Register the settings.
+			add_action('admin_menu', array($this, 'admin_menu')); // Will add the settings menu.
+		}
 		add_filter('wp_handle_upload', array($this, 'handle_upload')); // The very filter that takes care of uploads.
 		add_filter('upload_dir', array($this, 'upload_dir')); // Sets the paths and urls for uploads.
 		add_filter('wp_generate_attachment_metadata', array($this, 'generate_attachment_metadata')); // We use this filter to store resized versions of the images.
@@ -292,7 +304,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		add_filter('wp_handle_upload_prefilter', array($this, 'handle_upload_prefilter')); // This is where we check for filename dupes (and change them to avoid overwrites).
 		add_filter('shutdown', array($this, 'shutdown'));
 
-		switch (get_option('wpro-service')) {
+		switch (wpro_get_option('wpro-service')) {
 		case 'klandestino':
 			$this->backend = new WordpressReadOnlyKlandestino();
 			break;
@@ -343,7 +355,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 			wp_die ( __ ('You do not have sufficient permissions to access this page.'));
 		}
 
-			$wproService = get_option('wpro-service');
+			$wproService = wpro_get_option('wpro-service');
 
 		?>
 			<script language="JavaScript">
@@ -378,7 +390,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 						</tr>
 						<tr>
 							<th><label for="wpro-folder">Prepend all paths with folder</th>
-							<td><input name="wpro-folder" id="wpro-folder" type="text" value="<?php echo(get_option('wpro-folder')); ?>" class="regular-text code" /></td>
+							<td><input name="wpro-folder" id="wpro-folder" type="text" value="<?php echo(wpro_get_option('wpro-folder')); ?>" class="regular-text code" /></td>
 						</tr>
 					</table>
 					<div class="wpro-service-div" id="wpro-service-s3-div" <?php if ($wproService == 'klandestino') echo ('style="display:none"'); ?> >
@@ -386,17 +398,17 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 						<table class="form-table">
 							<tr>
 								<th><label for="wpro-aws-key">AWS Key</label></th> 
-								<td><input name="wpro-aws-key" id="wpro-aws-key" type="text" value="<?php echo get_option('wpro-aws-key'); ?>" class="regular-text code" /></td>
+								<td><input name="wpro-aws-key" id="wpro-aws-key" type="text" value="<?php echo wpro_get_option('wpro-aws-key'); ?>" class="regular-text code" /></td>
 							</tr>
 							<tr>
 								<th><label for="wpro-aws-secret">AWS Secret</label></th> 
-								<td><input name="wpro-aws-secret" id="wpro-aws-secret" type="text" value="<?php echo get_option('wpro-aws-secret'); ?>" class="regular-text code" /></td>
+								<td><input name="wpro-aws-secret" id="wpro-aws-secret" type="text" value="<?php echo wpro_get_option('wpro-aws-secret'); ?>" class="regular-text code" /></td>
 							</tr>
 							<tr>
 								<th><label for="wpro-aws-bucket">S3 Bucket</label></th> 
 								<td>
-									<input name="wpro-aws-bucket" id="wpro-aws-bucket" type="text" value="<?php echo get_option('wpro-aws-bucket'); ?>" class="regular-text code" /><br />
-									<input name="wpro-aws-virthost" id="wpro-aws-virthost" type="checkbox" value="1"  <?php if (get_option('wpro-aws-virthost')) echo('checked="checked"'); ?> /> Virtual hosting is enabled for this bucket.
+									<input name="wpro-aws-bucket" id="wpro-aws-bucket" type="text" value="<?php echo wpro_get_option('wpro-aws-bucket'); ?>" class="regular-text code" /><br />
+									<input name="wpro-aws-virthost" id="wpro-aws-virthost" type="checkbox" value="1"  <?php if (wpro_get_option('wpro-aws-virthost')) echo('checked="checked"'); ?> /> Virtual hosting is enabled for this bucket.
 								</td>
 							</tr>
 							<tr>
@@ -417,7 +429,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 											foreach ($aws_regions as $endpoint => $endpoint_name) {
 												echo ('<option value="' . $endpoint . '"');
-												if ($endpoint == get_option('wpro-aws-endpoint')) {
+												if ($endpoint == wpro_get_option('wpro-aws-endpoint')) {
 													echo(' selected="selected"');
 												}
 												echo ('>' . $endpoint_name . '</option>');
@@ -433,11 +445,11 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 						<table class="form-table">
 							<tr>
 								<th><label for="wpro-klandestino-name">Klandestino CDN Name</label></th> 
-								<td><input name="wpro-klandestino-name" id="wpro-klandestino-name" type="text" value="<?php echo get_option('wpro-klandestino-name'); ?>" class="regular-text code" /></td>
+								<td><input name="wpro-klandestino-name" id="wpro-klandestino-name" type="text" value="<?php echo wpro_get_option('wpro-klandestino-name'); ?>" class="regular-text code" /></td>
 							</tr>
 							<tr>
 								<th><label for="wpro-klandestino-secret">Klandestino CDN Secret</label></th> 
-								<td><input name="wpro-klandestino-secret" id="wpro-klandestino-secret" type="text" value="<?php echo get_option('wpro-klandestino-secret'); ?>" class="regular-text code" /></td>
+								<td><input name="wpro-klandestino-secret" id="wpro-klandestino-secret" type="text" value="<?php echo wpro_get_option('wpro-klandestino-secret'); ?>" class="regular-text code" /></td>
 							</tr>
 						</table>
 					</div>
@@ -480,15 +492,15 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 			while (is_dir($this->upload_basedir)) $this->upload_basedir = $this->tempdir . 'wpro' . time() . rand(0, 999999);
 		}
 		$data['basedir'] = $this->upload_basedir;
-		switch (get_option('wpro-service')) {
+		switch (wpro_get_option('wpro-service')) {
 		case 'klandestino':
-			$data['baseurl'] = 'http://' . trim(str_replace('//', '/', 'cdn.klandestino.se/' . get_option('wpro-klandestino-name') . '/' . trim(get_option('wpro-folder'))), '/');
+			$data['baseurl'] = 'http://' . trim(str_replace('//', '/', 'cdn.klandestino.se/' . wpro_get_option('wpro-klandestino-name') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
 			break;
 		default:
-			if (get_option('wpro-aws-virthost')) {
-				$data['baseurl'] = 'http://' . trim(str_replace('//', '/', get_option('wpro-aws-bucket') . '/' . trim(get_option('wpro-folder'))), '/');
+			if (wpro_get_option('wpro-aws-virthost')) {
+				$data['baseurl'] = 'http://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
 			} else {
-				$data['baseurl'] = 'http://' . trim(str_replace('//', '/', get_option('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(get_option('wpro-folder'))), '/');
+				$data['baseurl'] = 'http://' . trim(str_replace('//', '/', wpro_get_option('wpro-aws-bucket') . '.s3.amazonaws.com/' . trim(wpro_get_option('wpro-folder'))), '/');
 			}
 		}
 		$data['path'] = $this->upload_basedir . $data['subdir'];
