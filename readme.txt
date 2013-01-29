@@ -32,7 +32,7 @@ Note: You still need write access to the system /tmp directory for
 this plugin to work. It will use the system /tmp directory for
 temporary storage during uploads, image editing/scaling, etc.
 
-= Wordpress MU =
+= Wordpress MU/Multisite =
 
 This plugin works out-of-the box with Wordpress Multisite.
 
@@ -83,7 +83,7 @@ Those are the AWS endpoints:
 
 == Frequently Asked Questions ==
 
-= Will this plugin work in Wordpress MU environments? =
+= Will this plugin work in Wordpress MU/Multisite environments? =
 
 Yes.
 
@@ -121,12 +121,29 @@ me a beer in return. (GPLv2 still applies.)
 *	Added support for configuring by constants in `wp-config.php`.
 *	Plugin now works in open_basedir and safe_mode environments.
 *	Implemented our own sys_get_temp_dir for PHP < 5.2.1 compatibility.
+*	Fixed bug that left a lot of temporary directories in the system tmp.
 
-Creds to [serl](https://github.com/serl "serl")
+Creds to [Sergio Livi](https://github.com/serl "Sergio Livi")
 and [Keitaroh Kobayashi](https://github.com/keichan34 "Keitaroh Kobayashi")
-for contributing with code!
+for contributing with code! Also, thanks to
+[mavesell](https://github.com/maveseli "mavesell")
+and [nmagee](https://github.com/nmagee "nmagee") for feedback and comments!
 
 = 1.0 =
 
 *	The first public release.
 
+== Roadmap ==
+
+Todo list:
+
+*	Add support for FTP:ing uploads to somewhere, as an alternative to
+	Amazon S3.
+*	A global super-admin configuration for WPMU environments. Today, you
+	have to configure the plugin per site or configure using `wp-config.php`
+	contants.
+*	For WPMU: Store media in a single bucket, but separate them by site, in
+	sub-folders.
+*	Only handle `new` medias when activating this plugin on an existing
+	site. Today it's an all-or-nothing approach, and you will have to
+	migrate your media to S3.
