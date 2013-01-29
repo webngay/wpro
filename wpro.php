@@ -73,13 +73,15 @@ function curl_exec_follow($ch, &$maxredirect = null) {
 }
 
 function wpro_get_option($option, $default = false) {
-	if (!defined('WPMS_ON') || !WPMS_ON)
+	if (!defined('WPRO_ON') || !WPRO_ON) {
 		return get_option($option, $default);
+	}
 	$constantName = strtoupper(str_replace('-', '_', $option));
-	if (defined($constantName))
+	if (defined($constantName)) {
 		return constant($constantName);
-	else
+	} else {
 		return $default;
+	}
 }
 
 new WordpressReadOnly;
