@@ -68,7 +68,8 @@ Those are the constants
 *	define('WPRO_AWS_VIRTHOST', 'files.example.org'); // If you have
 	a virthost for your Amazon S3 bucket, it should be there.
 *	define('WPRO_AWS_ENDPOINT', 's3-eu-west-1.amazonaws.com'); // The
-	Amazon endpoint datacenter where your S3 bucket is.
+	Amazon endpoint datacenter where your S3 bucket is. Se list of
+	endpoints below.
 
 Those are the AWS endpoints:
 
@@ -114,6 +115,16 @@ If we meet some day, and you think this stuff is worth it, you may buy
 me a beer in return. (GPLv2 still applies.)
 
 == Changelog ==
+
+= 1.1 =
+
+*	Added support for configuring by constants in `wp-config.php`.
+*	Plugin now works in open_basedir and safe_mode environments.
+*	Implemented our own sys_get_temp_dir for PHP < 5.2.1 compatibility.
+
+Creds to [serl](https://github.com/serl "serl")
+and [Keitaroh Kobayashi](https://github.com/keichan34 "Keitaroh Kobayashi")
+for contributing with code!
 
 = 1.0 =
 
