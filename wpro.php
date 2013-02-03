@@ -74,7 +74,7 @@ function curl_exec_follow($ch, &$maxredirect = null) {
 
 function wpro_get_option($option, $default = false) {
 	if (!defined('WPRO_ON') || !WPRO_ON) {
-		return get_option($option, $default);
+		return get_site_option($option, $default);
 	}
 	$constantName = strtoupper(str_replace('-', '_', $option));
 	if (defined($constantName)) {
@@ -295,7 +295,14 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	function __construct() {
 		if (!defined('WPRO_ON') || !WPRO_ON) {
 			add_action('admin_init', array($this, 'admin_init')); // Register the settings.
-			add_action('admin_menu', array($this, 'admin_menu')); // Will add the settings menu.
+			// if ($this->is_trusted()) { // To early to find out, however in admin_init hook, it seems(?) to be too late to add network_admin_menu (which is weird, but i don't get it working there.)
+				if (is_multisite()) {
+					add_action('network_admin_menu', array($this, 'network_admin_menu'));
+				} else {
+					add_action('admin_menu', array($this, 'admin_menu')); // Will add the settings menu.
+				}
+				add_action('admin_post_wpro_settings_POST', array($this, 'admin_post')); // Gets called from plugin admin page POST request.
+			// }
 		}
 		add_filter('wp_handle_upload', array($this, 'handle_upload')); // The very filter that takes care of uploads.
 		add_filter('upload_dir', array($this, 'upload_dir')); // Sets the paths and urls for uploads.
@@ -319,29 +326,33 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 
 	}
 
+	function is_trusted() {
+		if (is_multisite()) {
+			if (is_super_admin()) {
+				return true;
+			}
+		} else {
+			if (current_user_can('manage_options')) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/* * * * * * * * * * * * * * * * * * * * * * *
 	  REGISTER THE SETTINGS:
 	* * * * * * * * * * * * * * * * * * * * * * */
 
 	function admin_init() {
-		register_setting('wpro-settings-group', 'wpro-service');
-		register_setting('wpro-settings-group', 'wpro-folder');
-		register_setting('wpro-settings-group', 'wpro-aws-key');
-		register_setting('wpro-settings-group', 'wpro-aws-secret');
-		register_setting('wpro-settings-group', 'wpro-aws-bucket');
-		register_setting('wpro-settings-group', 'wpro-aws-virthost');
-		register_setting('wpro-settings-group', 'wpro-aws-endpoint');
-		register_setting('wpro-settings-group', 'wpro-klandestino-name');
-		register_setting('wpro-settings-group', 'wpro-klandestino-secret');
-		add_option('wpro-service');
-		add_option('wpro-folder');
-		add_option('wpro-aws-key');
-		add_option('wpro-aws-secret');
-		add_option('wpro-aws-bucket');
-		add_option('wpro-aws-virthost');
-		add_option('wpro-aws-endpoint');
-		add_option('wpro-klandestino-name');
-		add_option('wpro-klandestino-secret');
+		add_site_option('wpro-service', '');
+		add_site_option('wpro-folder', '');
+		add_site_option('wpro-aws-key', '');
+		add_site_option('wpro-aws-secret', '');
+		add_site_option('wpro-aws-bucket', '');
+		add_site_option('wpro-aws-virthost', '');
+		add_site_option('wpro-aws-endpoint', '');
+		add_site_option('wpro-klandestino-name', '');
+		add_site_option('wpro-klandestino-secret', '');
 	}
 
 
@@ -352,12 +363,29 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 	function admin_menu() {
 		add_options_page('WPRO Plugin Settings', 'WPRO Settings', 'manage_options', 'wpro', array($this, 'admin_form'));
 	}
+	function network_admin_menu() {
+		add_submenu_page('settings.php', 'WPRO Plugin Settings', 'WPRO Settings', 'manage_options', 'wpro', array($this, 'admin_form'));
+	}
+	function admin_post() {
+		// We are handling the POST settings stuff ourselves, instead of using the Settings API.
+		// This is because the Settings API has no way of storing network wide options in multisite installs.
+		if (!$this->is_trusted()) return false;
+		if ($_POST['action'] != 'wpro_settings_POST') return false;
+		foreach (array('wpro-service', 'wpro-folder', 'wpro-aws-key', 'wpro-aws-secret', 'wpro-aws-bucket', 'wpro-aws-virthost', 'wpro-aws-endpoint', 'wpro-klandestino-name', 'wpro-klandestino-secret') as $allowedPostData) {
+			$data = false;
+			if (isset($_POST[$allowedPostData])) $data = stripslashes($_POST[$allowedPostData]);
+			update_site_option($allowedPostData, $data);
+		}
+		header('Location: ' . admin_url('network/settings.php?page=wpro&updated=true'));
+		exit();
+	}
+
 	function admin_form() {
-		if (!current_user_can ('manage_options'))  {
+		if (!$this->is_trusted()) {
 			wp_die ( __ ('You do not have sufficient permissions to access this page.'));
 		}
 
-			$wproService = wpro_get_option('wpro-service');
+		$wproService = wpro_get_option('wpro-service');
 
 		?>
 			<script language="JavaScript">
@@ -379,8 +407,16 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 			<div class="wrap">
 				<div id="icon-plugins" class="icon32"><br /></div>
 				<h2>WP Read-Only (WPRO)</h2>
-				<form name="wpro-settings-form" action="options.php" method="post">
-					<?php settings_fields ('wpro-settings-group'); ?>
+
+				<?php if ($_GET['updated']) { ?>
+					<div id="message" class="updated">
+						<p>Options saved.</p>
+					</div>
+				<?php } ?>
+
+				<form name="wpro-settings-form" action="<?php echo admin_url('admin-post.php');?>" method="post">
+					<input type="hidden" name="action" value="wpro_settings_POST" />
+
 					<h3><?php echo __('Common Settings'); ?></h3>
 					<table class="form-table">
 						<tr>
