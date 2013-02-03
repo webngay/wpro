@@ -34,10 +34,10 @@ temporary storage during uploads, image editing/scaling, etc.
 
 = Wordpress MU/Multisite =
 
-This plugin works out-of-the box with Wordpress Multisite.
+This plugin works out-of-the box with Wordpress Multisite/MU.
 
-You might want to configure the plugin with constants in your
-`wp-config.php`, or each site will have access to the WPRO settings.
+You will find the settings for this plugin in the Network Admin, when
+in a MU/Multisite environment.
 
 == Installation ==
 
@@ -122,6 +122,8 @@ me a beer in return. (GPLv2 still applies.)
 *	Plugin now works in open_basedir and safe_mode environments.
 *	Implemented our own sys_get_temp_dir for PHP < 5.2.1 compatibility.
 *	Fixed bug that left a lot of temporary directories in the system tmp.
+*	In a Multisite/MU environment, the settings are global for all sites,
+	in the Network Admin.
 
 Creds to [Sergio Livi](https://github.com/serl "Sergio Livi")
 and [Keitaroh Kobayashi](https://github.com/keichan34 "Keitaroh Kobayashi")
@@ -139,9 +141,6 @@ Todo list:
 
 *	Add support for FTP:ing uploads to somewhere, as an alternative to
 	Amazon S3.
-*	A global super-admin configuration for WPMU environments. Today, you
-	have to configure the plugin per site or configure using `wp-config.php`
-	contants.
 *	For WPMU: Store media in a single bucket, but separate them by site, in
 	sub-folders.
 *	Only handle `new` medias when activating this plugin on an existing
