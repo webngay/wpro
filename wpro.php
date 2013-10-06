@@ -525,9 +525,9 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 		if (!is_array($data) || !isset($data['sizes']) || !is_array($data['sizes'])) return $data;
 
 		$upload_dir = wp_upload_dir();
-		$filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+)\/[^\/]+$/', '\\1', $data['file']);
+		$filepath = $upload_dir['basedir'] . '/' . preg_replace('/^(.+\/)?.+$/', '\\1', $data['file']);
 		foreach ($data['sizes'] as $size => $sizedata) {
-			$file = $filepath . '/' . $sizedata['file'];
+			$file = $filepath . $sizedata['file'];
 			$url = $upload_dir['baseurl'] . substr($file, strlen($upload_dir['basedir']));
 
 			$mime = 'application/octet-stream';
