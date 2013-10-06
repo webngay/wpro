@@ -431,6 +431,7 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
 												's3-us-west-1.amazonaws.com' => 'US West (Northern California) Region',
 												's3-eu-west-1.amazonaws.com' => 'EU (Ireland) Region',
 												's3-ap-southeast-1.amazonaws.com' => 'Asia Pacific (Singapore) Region',
+												's3-ap-southeast-2.amazonaws.com' => 'Asia Pacific (Sydney) Region',
 												's3-ap-northeast-1.amazonaws.com' => 'Asia Pacific (Tokyo) Region',
 												's3-sa-east-1.amazonaws.com' => 'South America (Sao Paulo) Region'
 											);
