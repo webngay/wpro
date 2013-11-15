@@ -313,6 +313,9 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
         add_filter('shutdown', array($this, 'shutdown'));
 
         switch (wpro_get_option('wpro-service')) {
+        case 'http':
+            $this->backend = new WordpressReadOnlyHTTP();
+            break;
         case 'ftp':
             $this->backend = new WordpressReadOnlyFTP();
             break;
