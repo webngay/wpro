@@ -164,6 +164,37 @@ class WordpressReadOnlyFTP extends WordpressReadOnlyBackend {
 
 }
 
+class WordpressReadOnlyHTTP extends WordpressReadOnlyBackend {
+
+    function __construct() {
+    }
+
+    function upload($file, $fullurl, $mime) {
+        $this->debug('HTTP uploaded');
+        $this->debug('$file : '.$file);
+        // HTTP only needs file path in repo
+        $fullurl = str_replace(WP_CONTENT_URL, '', $fullurl);
+            //http://painlockcenter.uk.pn/repository/
+        $this->debug('$fullurl: '.$fullurl);
+        $this->debug('$mime: '.$mime);
+        $target_url = WPRO_HTTP_URL;
+        $post = array('fullurl' => $fullurl,'file'=>'@'.$file);
+
+        // make a POST request, save the result to $result
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL,$target_url);
+        curl_setopt($ch, CURLOPT_POST,1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $result=curl_exec ($ch);
+        curl_close ($ch);
+        // if the request returns an 'OK' string so the file has been uploaded
+        if ($result == 'OK') return true;
+        return false;
+    }
+
+}
+
 class WordpressReadOnlyS3 extends WordpressReadOnlyBackend {
 
     public $key;
