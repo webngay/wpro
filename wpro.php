@@ -537,6 +537,9 @@ class WordpressReadOnly extends WordpressReadOnlyGeneric {
         }
         $data['basedir'] = $this->upload_basedir;
         switch (wpro_get_option('wpro-service')) {
+        case 'http':
+            $data['baseurl'] = WP_CONTENT_URL.'/uploads';
+            break;
         case 'ftp':
             $data['baseurl'] = 'http://' . trim(str_replace('//', '/', trim(wpro_get_option('wpro-ftp-webroot'), '/') . '/' . trim(wpro_get_option('wpro-folder'))), '/');
             break;
